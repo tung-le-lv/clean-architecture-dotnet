@@ -21,6 +21,11 @@ The Aspire dashboard will open automatically, showing the application URLs and l
 
 The project uses EF Core with SQLite.
 
+> **Note:** If the `dotnet ef` tool is not installed, install it with:
+> ```bash
+> dotnet tool install --global dotnet-ef
+> ```
+
 To apply existing migrations to the database:
 
 ```bash
@@ -44,8 +49,3 @@ To generate a SQL script for the migrations:
 ```bash
 dotnet ef migrations script --project src/Infrastructure --startup-project src/Web
 ```
-
-> **Note:** If the `dotnet ef` tool is not installed, install it with:
-> ```bash
-> dotnet tool install --global dotnet-ef
-> ```

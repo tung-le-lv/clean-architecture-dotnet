@@ -1,0 +1,229 @@
+# User Authentication Flow
+# ========================
+# ASP.NET Core Identity API endpoints mapped at /api/Users
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+
+@HostAddress = https://localhost:7112
+@BasePath = {{HostAddress}}/api/Users
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  1. REGISTER — Create a new user account         │
+# └──────────────────────────────────────────────────┘
+
+POST {{BasePath}}/register
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "NewUser123!"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  2. LOGIN — Authenticate and get bearer token    │
+# └──────────────────────────────────────────────────┘
+# Returns: accessToken, refreshToken, expiresIn, tokenType
+
+POST {{BasePath}}/login
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "NewUser123!"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  2b. LOGIN (with cookie mode)                    │
+# └──────────────────────────────────────────────────┘
+# Pass ?useCookies=true to get a session cookie instead of a bearer token.
+# Pass ?useSessionCookies=true for a non-persistent session cookie.
+
+POST {{BasePath}}/login?useCookies=true
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "NewUser123!"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  3. REFRESH TOKEN — Get a new access token       │
+# └──────────────────────────────────────────────────┘
+# Use the refreshToken from the login response.
+
+@RefreshToken = <paste-refresh-token-here>
+
+POST {{BasePath}}/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{RefreshToken}}"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  4. GET USER INFO — Retrieve current user info   │
+# └──────────────────────────────────────────────────┘
+# Requires authentication (bearer token or cookie).
+
+@AccessToken = <paste-access-token-here>
+
+GET {{BasePath}}/manage/info
+Authorization: Bearer {{AccessToken}}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  5. UPDATE USER INFO — Change email/password     │
+# └──────────────────────────────────────────────────┘
+# All fields are optional. Provide oldPassword + newPassword to change password.
+
+POST {{BasePath}}/manage/info
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "newEmail": "updated@example.com",
+  "newPassword": "UpdatedPass123!",
+  "oldPassword": "NewUser123!"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  6. FORGOT PASSWORD — Request a password reset   │
+# └──────────────────────────────────────────────────┘
+# Sends a password reset code (in a real app, delivered via email).
+
+POST {{BasePath}}/forgotPassword
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  7. RESET PASSWORD — Set a new password          │
+# └──────────────────────────────────────────────────┘
+# Use the reset code received from forgotPassword.
+
+@ResetCode = <paste-reset-code-here>
+
+POST {{BasePath}}/resetPassword
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "resetCode": "{{ResetCode}}",
+  "newPassword": "ResetPass123!"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  8. RESEND CONFIRMATION EMAIL                    │
+# └──────────────────────────────────────────────────┘
+
+POST {{BasePath}}/resendConfirmationEmail
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  9. CONFIRM EMAIL                                │
+# └──────────────────────────────────────────────────┘
+# Use userId and code from the confirmation email link.
+
+@UserId = <paste-user-id-here>
+@ConfirmCode = <paste-confirmation-code-here>
+
+GET {{BasePath}}/confirmEmail?userId={{UserId}}&code={{ConfirmCode}}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  10. TWO-FACTOR AUTH — Manage 2FA settings       │
+# └──────────────────────────────────────────────────┘
+# GET-like POST to retrieve 2FA status and shared key.
+
+POST {{BasePath}}/manage/2fa
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  10b. ENABLE 2FA — Submit TOTP code to enable    │
+# └──────────────────────────────────────────────────┘
+
+@TotpCode = <paste-totp-code-here>
+
+POST {{BasePath}}/manage/2fa
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{
+  "enable": true,
+  "twoFactorCode": "{{TotpCode}}"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  10c. LOGIN WITH 2FA — Provide TOTP code         │
+# └──────────────────────────────────────────────────┘
+
+POST {{BasePath}}/login
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "NewUser123!",
+  "twoFactorCode": "{{TotpCode}}"
+}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  11. LOGOUT — End session (custom endpoint)      │
+# └──────────────────────────────────────────────────┘
+# Requires authentication. Send an empty JSON body.
+
+POST {{BasePath}}/logout
+Authorization: Bearer {{AccessToken}}
+Content-Type: application/json
+
+{}
+
+###
+
+# ┌──────────────────────────────────────────────────┐
+# │  12. LOGIN AS ADMIN (seeded user)                │
+# └──────────────────────────────────────────────────┘
+
+POST {{BasePath}}/login
+Content-Type: application/json
+
+{
+  "email": "administrator@localhost",
+  "password": "Administrator1!"
+}
+
+###
+
